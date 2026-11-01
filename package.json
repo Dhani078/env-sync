@@ -1,0 +1,24 @@
+{
+  "name": "env-sync",
+  "version": "1.0.0",
+  "description": "Environment variable discovery and .env.example synchronization CLI.",
+  "bin": {
+    "env-sync": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "node test/run.js"
+  },
+  "keywords": [
+    "env",
+    "environment",
+    "dotenv",
+    "sync",
+    "config",
+    "audit"
+  ],
+  "author": "Dhani078 <dhanisepeda@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
