@@ -1,29 +1,38 @@
 ---
 name: env-sync
-description: Environment variable discovery and .env.example synchronization CLI. Use when developer adds new env variables, verifies configuration completeness, or needs to synchronize .env.example with actual codebase usage.
+description: Environment variable discovery and .env.example synchronizer CLI and agent skill. Scans codebases for process.env and import.meta.env keys and generates clean templates.
+risk: safe
 version: 1.0.0
-author: Dhani078
 ---
 
-Env Sync Skill
+NAME
+env-sync - Environment variable auditor and template synchronizer
 
-Use when developing features that introduce new configuration variables or when onboarding to a project with missing environment definitions.
+SYNOPSIS
+npx env-sync [options]
 
-Instructions
+COMMANDS
+- audit: Reconcile code references against .env and .env.example.
+- --check: CI mode, exits with code 1 if variables are missing.
+- --fix: Synchronize .env.example by appending missing keys.
 
-1. Scan codebase for environment variable references:
-   ```bash
-   npx env-sync check
-   ```
+OPTIONS
+- --env <path>: Local env file path.
+- --example <path>: Example template file path.
+- --strict: Fail on dead unreferenced variables.
+- --json: Output JSON report.
 
-2. Review drift analysis:
-   - Identify variables present in code but absent from .env.example.
-   - Identify variables declared in .env that have no active consumers in code.
+DETERMINISTIC BEHAVIOR AND INVARIANTS
+1. The tool must never copy secret values from .env into .env.example.
+2. If keys are referenced in code but missing from .env.example, --check must exit with code 1.
+3. If all referenced keys are declared, the tool must exit with code 0.
+4. Existing comments and ordering in .env.example must be preserved when adding new keys.
 
-3. Synchronize template safely:
-   ```bash
-   npx env-sync sync --fix
-   ```
+AGENT INTEGRATION INSTRUCTIONS
+When onboarding a repository or preparing a pull request:
+1. Run npx env-sync --check to verify environment variable parity.
+2. If missing keys are reported, run npx env-sync --fix.
+3. Commit the updated .env.example file.
 
-4. Verify zero secret exposure:
-   Confirm that all values in .env.example are sanitized placeholders (e.g. `your_api_key_here`).
+AUTHOR
+Dhani078 (dhanisepeda@gmail.com)

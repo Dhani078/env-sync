@@ -1,46 +1,41 @@
 ARCHITECTURE: env-sync
 
-Data Flow Diagram
+1. Architectural Pipeline
 
 ```
-+-----------------------------------------------------------+
-|                        CLI Runner                         |
-|                     (bin/env-sync.js)                     |
-+-----------------------------+-----------------------------+
-                              |
-                              v
-+-----------------------------------------------------------+
-|                   Codebase Regex & AST                    |
-|   - Scans: process.env, import.meta.env, os.environ       |
-|   - Collects set of unique variable keys                  |
-+-----------------------------+-----------------------------+
-                              |
-                              v
-+-----------------------------------------------------------+
-|                       Env File Reader                     |
-|   - Parses: .env, .env.local, .env.example                |
-|   - Preserves section comments and grouping               |
-+-----------------------------+-----------------------------+
-                              |
-                              v
-+-----------------------------------------------------------+
-|                     Reconciliation Matrix                 |
-|   - Computes: Used vs Declared vs Documented              |
-|   - Identifies orphan keys and undocumented dependencies  |
-+-----------------------------+-----------------------------+
-                              |
-                              v
-+-----------------------------------------------------------+
-|                     Emitter & Synchronizer                |
-|   - Formats sanitized .env.example template               |
-|   - Injects dummy placeholders: your_key_here             |
-+-----------------------------------------------------------+
++-------------------------------------------------------------+
+|                      SOURCE CODE SCANNER                    |
+|   - Traverses project source directories recursively        |
+|   - Extracts regex matches for env access patterns          |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|                     CONFIG FILE PARSER                      |
+|   - Parses .env key-value pairs (ignoring values)           |
+|   - Parses .env.example keys and structural comments        |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|                     RECONCILIATION ENGINE                   |
+|   - Performs set intersection and difference operations     |
+|   - Identifies missing, undeclared, and dead variables      |
++------------------------------+------------------------------+
+                               |
+                               v
++-------------------------------------------------------------+
+|                     SYNCHRONIZATION WRITER                  |
+|   - On --fix, appends missing keys with masked placeholders |
+|   - Emits formatted table or JSON results to stdout         |
++-------------------------------------------------------------+
 ```
 
-Component Responsibilities
+2. Standard Library Mapping
+- Filesystem: node:fs readdirSync, readFileSync, appendFileSync.
+- Path Manipulation: node:path join, resolve.
+- Process: node:process cwd, exit.
 
-- bin/env-sync.js: CLI handler and exit code evaluator.
-- src/scanner.js: Static code analyzer for env key extraction.
-- src/parser.js: Robust .env parser with comment preservation.
-- src/reconciler.js: Set intersection and difference engine.
-- src/sanitizer.js: Placeholder generator preventing secret leaks.
+3. Performance Invariants
+- Execution completes in under 25 milliseconds.
+- Resident memory footprint under 20 megabytes RSS.

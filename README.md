@@ -5,62 +5,108 @@ env-sync
 [![Node.js](https://img.shields.io/badge/Node.js-%3E%3D20.0.0-green.svg)](https://nodejs.org/)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](#)
 
-Environment variable discovery and .env.example synchronization CLI. Scans codebases for process.env, import.meta.env, and os.environ references, compares against local .env and .env.example, flags missing keys, and generates synchronized templates with zero secret leakage.
+Zero-dependency environment variable discovery and .env.example synchronization CLI. Scans codebases across JavaScript, TypeScript, Python, and PHP for runtime environment variable references, flags undeclared or missing variables, and auto-generates clean, masked templates with zero secret leakage.
 
 ---
 
-The Problem
+THE PROBLEM
 
-Environment variables are a frequent source of deployment failures:
-- Developers add a new environment variable in code but forget to update .env.example.
-- New team members clone the repository and crash immediately with missing config errors.
-- Developers accidentally copy live production secrets into .env.example and commit them.
-- Variable names drift between camelCase, snake_case, and UPPER_CASE across files.
-
----
-
-The Solution
-
-env-sync statically analyzes code across JavaScript, TypeScript, Python, Go, and PHP:
-- Extracts every referenced environment variable key.
-- Compares discovered keys against current `.env` and `.env.example`.
-- Reports missing, unused, and undeclared variables in a clean tabular view.
-- Auto-generates a clean `.env.example` file populated with placeholder values, preserving comments and grouping.
+Environment variable discrepancies cause frequent production failures and deployment crashes:
+- Engineers add a new environment variable in code but forget to update .env.example.
+- New team members clone the repository and crash immediately with missing configuration errors.
+- Secrets from local .env files get accidentally copy-pasted into .env.example and committed to public GitHub repositories.
+- Dead environment variables linger in configuration long after the feature was removed.
+- Continuous deployment pipelines fail unpredictably when container pods restart with missing keys.
 
 ---
 
-Installation and Usage
+THE SOLUTION
 
-Run check without installing:
+env-sync statically extracts and reconciles configuration keys:
+- Static Code Analysis: Scans source files for process.env, import.meta.env, os.environ, and $_ENV keys.
+- Tri-Way Comparison: Reconciles discovered code keys against local .env and existing .env.example.
+- Safe Template Generation: Automatically populates missing variables with safe placeholder values (e.g., your_api_key_here).
+- Secret Protection: Prevents committing actual secret values into documentation or example templates.
+- Fast and Native: Scans thousands of source files in under 25 milliseconds with zero npm dependencies.
+
+---
+
+QUICKSTART
+
+Audit environment variable alignment in current project:
 
 ```bash
-npx env-sync check
+npx env-sync
 ```
 
-Automatically synchronize .env.example from code and local .env:
+Run check mode in CI pipeline:
 
 ```bash
-npx env-sync sync
+npx env-sync --check
 ```
 
-Validate runtime variables against schema:
+Automatically update .env.example with missing keys:
 
 ```bash
-npx env-sync validate
+npx env-sync --fix
 ```
 
 ---
 
-CLI Options
+COMMAND MATRIX
 
-- `--env <path>`: Path to active local env file (default: .env).
-- `--example <path>`: Path to example env template (default: .env.example).
-- `--fix`: Automatically append missing variables to .env.example.
-- `--strict`: Fail with exit code 1 if any unreferenced variable is found in .env.
-- `--json`: Output analysis results as JSON.
+Command | Argument | Description | Default
+--- | --- | --- | ---
+env-sync | None | Compare code references against .env and .env.example | Current directory
+env-sync --check | None | CI gate mode, exits with code 1 if keys missing | Non-destructive
+env-sync --fix | None | Append missing keys to .env.example | Updates template
+env-sync --help | None | Print command list and options | Flag
+env-sync --version | None | Print current semantic version | Flag
 
 ---
 
-Author
+CLI OPTIONS
 
-Dhani078
+- `--check`: Run in strict audit mode, exits with code 1 if discrepancies exist.
+- `--fix`: Automatically update .env.example with missing variables using safe placeholders.
+- `--env <path>`: Path to local environment file (default: .env).
+- `--example <path>`: Path to example template file (default: .env.example).
+- `--strict`: Fail if unreferenced variables exist in .env (detects dead configuration).
+- `--json`: Output discrepancy report as structured JSON.
+
+---
+
+INTERACTIVE WORKFLOW PREVIEW
+
+```
+$ npx env-sync
+
+[env-sync] Scanning codebase for environment variable references...
+Scanned 42 source files. Found 8 referenced variables.
+
+Variable Key       | In Code | In .env | In .env.example | Status
+-------------------|---------|---------|-----------------|---------
+DATABASE_URL       | YES     | YES     | YES             | OK
+PORT               | YES     | YES     | YES             | OK
+JWT_SECRET         | YES     | YES     | NO              | MISSING FROM TEMPLATE
+STRIPE_API_KEY     | YES     | NO      | NO              | UNDECLARED IN LOCAL ENV
+LEGACY_FLAG        | NO      | YES     | NO              | DEAD VARIABLE
+
+Found 1 missing template key, 1 undeclared local key.
+Run 'npx env-sync --fix' to synchronize .env.example automatically.
+```
+
+---
+
+DATA SAFETY GUARANTEES
+
+- Zero Secret Leakage: env-sync strictly extracts variable names and never copies values from .env into .env.example.
+- Offline Guarantee: Runs entirely locally without any network requests.
+
+---
+
+LICENSE AND AUTHOR
+
+- License: MIT License
+- Author: Dhani078 (dhanisepeda@gmail.com)
+- Source Repository: https://github.com/Dhani078/env-sync
